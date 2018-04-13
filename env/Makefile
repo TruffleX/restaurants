@@ -10,3 +10,5 @@ build:
 run:
 	docker run -i -t -p 8889:8889 -v $(host_data_path):$(container_data_path) nlp
 
+run-get-data:
+	docker exec data/yelp/get_data.py

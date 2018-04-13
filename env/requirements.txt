@@ -1,3 +1,5 @@
 spacy
 dask
 boto3
+aiohttp
+async_timeout
