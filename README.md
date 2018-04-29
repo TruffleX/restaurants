@@ -4,7 +4,6 @@
 Get docker.
 
 ```bash
-cd env 
 make build
 make run
 ```
