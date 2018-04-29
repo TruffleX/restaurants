@@ -17,4 +17,4 @@ run-get-data:
 	docker exec data/yelp/get_data.py
 
 secrets:
-	python src/make_secrets.py
+	python src/scripts/make_secrets.py
