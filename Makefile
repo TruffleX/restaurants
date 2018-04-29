@@ -6,6 +6,7 @@ export container_data_path=/home/jovyan/data
 export container_src_path=/home/jovyan/src
 
 build:
+	make secrets
 	docker build --tag nlp .
 
 run:
@@ -13,3 +14,6 @@ run:
 
 run-get-data:
 	docker exec data/yelp/get_data.py
+
+secrets:
+	python src/make_secrets.py
