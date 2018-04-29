@@ -10,7 +10,7 @@ build:
 	docker build --tag nlp .
 
 run:
-	docker run -i -t -p 8889:8889 -v $(host_data_path):$(container_data_path) -v $(host_src_path):$(container_src_path) nlp
+	docker run -i -t -p 8889:8889 --env-file secrets -v $(host_data_path):$(container_data_path) -v $(host_src_path):$(container_src_path) nlp
 
 run-get-data:
 	docker exec data/yelp/get_data.py
