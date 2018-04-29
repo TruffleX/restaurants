@@ -1,7 +1,7 @@
 # restaurants
 
 ### Setup
-Get docker.
+Get docker. Note that our container current exposes port 8889, so if youre going to use jupyter stuff use that port.
 
 ```bash
 cd env 
