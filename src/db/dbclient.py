@@ -37,10 +37,10 @@ class Feed:
     def get_new_entries(self):
         rss = self.get_rss()
         current_entries = self.client.collection.find({'feed_url': self.url})
-        item_ids = [i['id'] for i in current_entries]
+        item_ids = [i['link'] for i in current_entries]
 
         for entry in rss['entries']:
-            if entry['id'] not in item_ids:
+            if entry['link'] not in item_ids:
                 entry['feed_name'] = self.feedname
                 entry['feed_url'] = self.url
                 yield entry
