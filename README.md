@@ -8,7 +8,17 @@ make build
 make run
 ```
 
+
+## Commands:
+
+* `make run`: Launch Environment
+* `make jupyter`: Launch jupyter notebook in environment
+* `make update`: Update DB with new RSS entries (from environment)
+
 ## Data
+
+* http://vladimiralexiev.github.io/pubs/Tagarev2017-DomainSpecificGazetteer.pdf
+* http://wiki.dbpedia.org/OnlineAccess
 
 ### RSS
 
