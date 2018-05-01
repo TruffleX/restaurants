@@ -41,7 +41,7 @@ update_db:
 	-v $(host_src_path):$(container_src_path) \
 	-v $(host_notebooks_path):$(container_notebooks_path) \
 	nlp \
-	$(container_src_path)/scripts/update_rss.py
+	$(container_src_path)/etl/rss.py
 
 notebook:
 	make jupyter
