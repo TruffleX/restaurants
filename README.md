@@ -16,7 +16,12 @@ make run
 * `make update`: Update DB with new RSS entries (from environment)
 
 ## Data
-
+### dbpedia:
+* list of prefixes: http://dbpedia.org/sparql?help=nsdecl
+* online client: http://dbpedia.org/snorql
+* great online editor: http://yasgui.org/
+* https://query.wikidata.org/
+* http://dbpedia.org/page/Hamburger
 * http://vladimiralexiev.github.io/pubs/Tagarev2017-DomainSpecificGazetteer.pdf
 * http://wiki.dbpedia.org/OnlineAccess
 
