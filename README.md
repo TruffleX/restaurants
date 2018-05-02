@@ -21,12 +21,13 @@ make run
 * etl/rss.py: executable script for updating mongo db with latest from known RSS feeds.
 * db/dbclient: Client for interacting with mongo db
 
-## Data
+## Internal
 
-### Internal Mongo:
-
-https://mlab.com/databases/trufflex
-
+* Trello: https://trello.com/b/0TjRZqR7/trufflex
+* Mongo: https://mlab.com/databases/trufflex
+* Slack: truffleX.slack.com
+* github: https://github.com/TruffleX/restaurants
+* google docs: https://drive.google.com/drive/folders/199qmYYjFKYldQxf5NUxysB2s9zC5WZnu
 
 ### dbpedia:
 * list of prefixes: http://dbpedia.org/sparql?help=nsdecl
