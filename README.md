@@ -15,6 +15,12 @@ make run
 * `make jupyter`: Launch jupyter notebook in environment
 * `make update`: Update DB with new RSS entries (from environment)
 
+## Tools
+
+* etl/dbpedia.py: sparql client for grabbing dbpedia entries.
+* etl/rss.py: executable script for updating mongo db with latest from known RSS feeds.
+* db/dbclient: Client for interacting with mongo db
+
 ## Data
 ### dbpedia:
 * list of prefixes: http://dbpedia.org/sparql?help=nsdecl
