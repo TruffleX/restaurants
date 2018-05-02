@@ -22,6 +22,12 @@ make run
 * db/dbclient: Client for interacting with mongo db
 
 ## Data
+
+### Internal Mongo:
+
+https://mlab.com/databases/trufflex
+
+
 ### dbpedia:
 * list of prefixes: http://dbpedia.org/sparql?help=nsdecl
 * online client: http://dbpedia.org/snorql
