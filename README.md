@@ -13,7 +13,7 @@ make run
 * `make run`: Launch Environment
 * `make jupyter`: Launch jupyter notebook in environment
 * `make update`: Update DB with new RSS entries (from environment)
-* `make app-dev`: Run the web app in dev mode.
+* `make app-dev`: Run the web app in dev mode (localhost:8000).
 
 ## Tools
 
