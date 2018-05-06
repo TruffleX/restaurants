@@ -1,19 +1,19 @@
 # restaurants
 
 ## Setup
-Get docker. Note that our container current exposes port 8889, so if youre going to use jupyter stuff use that port.
+Get docker. Then:
 
 ```bash
 make build
 make run
 ```
 
-
 ## Commands:
 
 * `make run`: Launch Environment
 * `make jupyter`: Launch jupyter notebook in environment
 * `make update`: Update DB with new RSS entries (from environment)
+* `make app-dev`: Run the web app in dev mode.
 
 ## Tools
 

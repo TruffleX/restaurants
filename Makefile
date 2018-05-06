@@ -44,6 +44,20 @@ update_db:
 	nlp \
 	$(container_src_path)/etl/rss.py
 
+app-dev:
+	make secrets
+	docker run -i -t -p 8889:8889 -p 8000:8000 \
+	--env-file $(secrets_path) \
+	--entrypoint "flask" \
+	-v $(host_data_path):$(container_data_path) \
+	-v $(host_src_path):$(container_src_path) \
+	-v $(host_notebooks_path):$(container_notebooks_path) \
+	-e FLASK_APP='flaskr' \
+	-e FLASK_ENV='development' \
+	-w $(container_src_path)/apps/flask-app \
+	nlp \
+	run --host 0.0.0.0 --port 8000
+
 notebook:
 	make jupyter
 
