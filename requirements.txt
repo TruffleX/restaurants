@@ -9,3 +9,5 @@ pymongo
 feedparser
 awscli
 sparqlwrapper
+django
+flask

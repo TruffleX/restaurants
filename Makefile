@@ -14,16 +14,17 @@ build:
 
 run:
 	make secrets
-	docker run -i -t -p 8889:8889 \
+	docker run -i -t -p 8889:8889 -p 8000:8000 \
 	--env-file $(secrets_path) \
 	-v $(host_data_path):$(container_data_path) \
 	-v $(host_src_path):$(container_src_path) \
 	-v $(host_notebooks_path):$(container_notebooks_path) \
+	-e GRANT_SUDO=yes \
 	nlp
 
 jupyter:
 	make secrets
-	docker run -i -t -p 8889:8889 \
+	docker run -i -t -p 8889:8889 -p 8000:8000 \
 	--env-file $(secrets_path) \
 	--entrypoint "jupyter" \
 	-v $(host_data_path):$(container_data_path) \
@@ -34,7 +35,7 @@ jupyter:
 
 update_db:
 	make secrets
-	docker run -i -t -p 8889:8889 \
+	docker run -i -t -p 8889:8889 -p 8000:8000 \
 	--env-file $(secrets_path) \
 	--entrypoint "python" \
 	-v $(host_data_path):$(container_data_path) \
