@@ -22,43 +22,13 @@
     <!--Include Jquery-->
     <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
     <div id="map"></div>
+    <script src="/static/map.js"> </script>
     <script>
+      var url = "https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMap"
 
-    window.appConfig = {
-        debug: {% if env == 'development' %}true{% else %}false{% endif %},
-      }
-
-      function initMap() {
-        var myLatLng = {lat: 38.028273, lng: -118.401568};
-
-        var map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 4,
-          center: myLatLng
-        });
-
-        var marker = new google.maps.Marker({
-          position: myLatLng,
-          map: map,
-          title: 'My Home'
-        });
-        var src = 'https://imagesvc.timeincapp.com/v3/mm/image?url=https%3A%2F%2Fcdn-image.foodandwine.com%2Fsites%2Fdefault%2Ffiles%2F1501607996%2Fopentable-scenic-restaurants-marine-room-FT-BLOG0818.jpg&w=1600&q=70'
-        var infowindow = new google.maps.InfoWindow({
-
-          content: "This is a place. <img src="+src+">"
-        });
-
-        marker.addListener('click', function() {
-          infowindow.open(map, marker);
-        });
-
-        }
-
-        var url = "https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMap"
-
-        $.getScript(url, function() {
-            alert('Load was performed.');
-            <!--async defer-->
-        });
+    $.getScript(url, function() {
+        console.log("Script loaded from " + url)
+    });
     </script>
 
   </body>
