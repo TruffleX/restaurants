@@ -30,6 +30,7 @@ var markers = []
 function markerFactory(map, lat, lng, id, title, content){
     var ids = markers.map(marker => marker.id)
     if (ids.includes(id) == false){
+        console.log("Creating new marker " + id)
         var LatLng = {lat: lat, lng: lng};
         var marker = new google.maps.Marker({
           position: LatLng,
@@ -52,9 +53,36 @@ function initMap() {
     var myLatLng = {lat: 38.028273, lng: -118.401568};
 
     var map = new google.maps.Map(document.getElementById('map'), {
-      zoom: 4,
-      center: myLatLng
+      center: myLatLng,
+      zoom: 10
     });
+
+    // Try HTML5 geolocation.
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var pos = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        console.log('Location found.');
+        map.setCenter(pos);
+        map.setZoom(15)
+      }, function() {
+        handleLocationError(true, infoWindow, map.getCenter());
+      });
+    } else {
+      // Browser doesn't support Geolocation
+      handleLocationError(false, infoWindow, map.getCenter());
+    }
+
+  function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+    console.log("Could not get location")
+    infoWindow.setPosition(pos);
+    infoWindow.setContent(browserHasGeolocation ?
+                          'Error: The Geolocation service failed.' :
+                          'Error: Your browser doesn\'t support geolocation.');
+    infoWindow.open(map);
+  }
 
     google.maps.event.addListener(map, 'tilesloaded', function() {
         var bounds = map.getBounds()
