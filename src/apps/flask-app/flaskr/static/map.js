@@ -1,28 +1,4 @@
-//window.appConfig = {
-//    debug: {% if env == 'development' %}true{% else %}false{% endif %},
-//  }
 
-
-//List of map events:
-//bounds_changed
-//center_changed
-//click
-//dblclick
-//drag
-//dragend
-//dragstart
-//heading_changed
-//idle
-//maptypeid_changed
-//mousemove
-//mouseout
-//mouseover
-//projection_changed
-//resize
-//rightclick
-//tilesloaded
-//zoom_changed
-//tilt_changed
 
 // globals
 var markers = []
@@ -48,14 +24,14 @@ function markerFactory(map, lat, lng, id, title, content){
     }
 }
 
+
 function initMap() {
 
-    var myLatLng = {lat: 38.028273, lng: -118.401568};
-
+    var defaultPos = {lat: 38.028273, lng: -118.401568};
     var map = new google.maps.Map(document.getElementById('map'), {
-      center: myLatLng,
-      zoom: 10
-    });
+         center: defaultPos,
+         zoom: 10
+        });
 
     // Try HTML5 geolocation.
     if (navigator.geolocation) {
@@ -64,27 +40,23 @@ function initMap() {
           lat: position.coords.latitude,
           lng: position.coords.longitude
         };
+
         console.log('Location found.');
-        map.setCenter(pos);
-        map.setZoom(15)
+
+        map.setCenter(pos)
       }, function() {
-        handleLocationError(true, infoWindow, map.getCenter());
+        handleLocationError(true);
       });
     } else {
       // Browser doesn't support Geolocation
-      handleLocationError(false, infoWindow, map.getCenter());
+      handleLocationError(false);
     }
 
-  function handleLocationError(browserHasGeolocation, infoWindow, pos) {
-    console.log("Could not get location")
-    infoWindow.setPosition(pos);
-    infoWindow.setContent(browserHasGeolocation ?
-                          'Error: The Geolocation service failed.' :
-                          'Error: Your browser doesn\'t support geolocation.');
-    infoWindow.open(map);
-  }
+      function handleLocationError(browserHasGeolocation) {
+        console.log("Could not get location")
+      }
 
-    google.maps.event.addListener(map, 'tilesloaded', function() {
+    var update = function() {
         var bounds = map.getBounds()
         lats = bounds['f']
         lons = bounds['b']
@@ -94,7 +66,7 @@ function initMap() {
         south = lons['b']
 
         data = {'west': west, 'east': east, 'south': south, 'north': north}
-        console.log(data)
+
         $.post(
             '/api/entries',
             data,
@@ -110,5 +82,7 @@ function initMap() {
                 })
             }
          )
-    });
+    };
+    google.maps.event.addListener(map, 'tilesloaded', update)
+    document.onload = update
 }
