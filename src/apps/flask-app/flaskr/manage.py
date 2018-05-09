@@ -1,2 +1,2 @@
-def url_for('static', filename='map.js', env='development'):
+def url_for(resource, filename='map.js', env='development'):
     pass
