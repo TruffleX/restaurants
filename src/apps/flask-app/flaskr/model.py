@@ -21,7 +21,7 @@ from db.dbclient import MongoClient
 
 class Restaurants:
     def __init__(self, dao):
-        self.dao = dao.db.get_collection('restaurants')
+        self.dao = dao.db.get_collection('restaurant')
 
     def filter_by_coords(self, west=None, east=None, north=None, south=None):
         if any([i is None for i in [west, east, south, north]]):

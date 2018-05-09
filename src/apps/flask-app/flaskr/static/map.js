@@ -30,7 +30,7 @@ function initMap() {
     var defaultPos = {lat: 38.028273, lng: -118.401568};
     var map = new google.maps.Map(document.getElementById('map'), {
          center: defaultPos,
-         zoom: 10
+         zoom: 18
         });
 
     // Try HTML5 geolocation.
@@ -44,6 +44,10 @@ function initMap() {
         console.log('Location found.');
 
         map.setCenter(pos)
+        map.setZoom(18)
+        var listener = google.maps.event.addListenerOnce(map, "idle", function() {
+            if (map.getZoom() < 18) map.setZoom(18);
+        });
       }, function() {
         handleLocationError(true);
       });

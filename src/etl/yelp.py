@@ -7,6 +7,8 @@ import requests
 import logging
 from tqdm import tqdm_notebook
 from hashlib import md5
+import os
+import datetime
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
