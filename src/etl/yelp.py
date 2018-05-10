@@ -6,9 +6,10 @@ from db.dbclient import MongoClient
 from itertools import cycle
 import requests
 import logging
-from tqdm import tqdm_notebook
+from tqdm import tqdm_notebook, tqdm
 import datetime
 from hashlib import md5
+from pymongo import ReplaceOne
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -143,6 +144,10 @@ class YelpClient:
 
         return results, exception
 
+    def _to_zip(self, zipcode):
+        zipcode = "0" * (5 - len(str(zipcode))) + str(zipcode)
+        return zipcode
+
     def log(self, status_code, reason):
         logging.error(f"Got HTTP Error {status_code}: {reason}")
         return None, Exception("HTTP Error {status_code}: {reason}")
@@ -161,7 +166,7 @@ class YelpClient:
         return self.zip_queue[idx]
 
     @staticmethod
-    def get_restaurants(max_zips=10):
+    def get_restaurants(notebook=False, max_zips=10):
         client = YelpClient()
         categories = "restaurants"
         limit = 50
@@ -170,7 +175,7 @@ class YelpClient:
         exception = None
         results = []
         count = 0
-        prog = tqdm_notebook(1e9)
+        prog = tqdm_notebook(1e9) if notebook else tqdm(1e9)
 
         while exception is None and count < max_zips:
             zipcode = client.pick_next_zip()
@@ -179,7 +184,7 @@ class YelpClient:
                 "limit": limit,
                 "sort_by": sort_by,
                 "categories": categories,
-                "location": zipcode,
+                "location": client._to_zip(zipcode),
                 'offset': 0,
             }
             restaurants, exception = client.search(url, params, client.log)
@@ -190,16 +195,24 @@ class YelpClient:
                 count += 1
                 prog.update(len(restaurants))
 
-        client.upload_results(results)
+        client.upload_results(results, notebook=notebook)
         return results
 
-    def upload_results(self, results):
+    def upload_results_slow(self, results, notebook=True):
         logging.info("Uploading results")
-        for result in tqdm_notebook(results, total=len(results)):
+        prog = tqdm_notebook if notebook else tqdm
+        for result in prog(results, total=len(results)):
             self.result_client.replace_one({"hash_id": result['hash_id']}, result, upsert=True)
         self.save_ingest()
 
+    def upload_results(self, results, notebook=True):
+        logging.info("Uploading results")
 
+
+        operations = [ReplaceOne({"hash_id": result['hash_id']}, result, upsert=True) for result in results]
+
+        self.result_client.bulk_write(operations)
+        self.save_ingest()
 
 
 
