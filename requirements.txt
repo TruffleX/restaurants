@@ -11,4 +11,4 @@ awscli
 sparqlwrapper
 django
 flask
-apache-airflow[s3, postgres, password]
+apache-airflow[s3, postgres, password, webserver, sqlite]

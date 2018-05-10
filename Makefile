@@ -9,14 +9,21 @@ export container_notebooks_path=/home/jovyan/jupyter-notebooks
 export secrets_path=secrets
 export IMAGE=trufflex
 export IMAGE_AWS=380559525413.dkr.ecr.us-east-1.amazonaws.com/trufflex
+export AIRFLOW_HOME="$(pwd)/src/etl/jobs"
 
 setup:
 	pip install awscli --upgrade --user
-	sudo echo "" >> ~/.bash_profile
-	sudo echo "export TRUFFLEX_PATH=$(shell pwd)" >> ~/.bash_profile
+	pip install "apache-airflow[webserver, sqlite]"
+	airflow initdb
+	echo "" >> ~/.bash_profile
+	echo "export TRUFFLEX_PATH=$(shell pwd)" >> ~/.bash_profile
 	export PATH=~/.local/bin:$$PATH
 	echo "Enter your TruffleX AWS credentials"
 	aws configure
+
+airflow-webserver:
+	airflow initdb
+	airflow webserver
 
 build:
 	make secrets
@@ -54,6 +61,17 @@ update_db:
 	-v $(host_notebooks_path):$(container_notebooks_path) \
 	$(IMAGE) \
 	$(container_src_path)/etl/rss.py
+
+yelp_ingest:
+	make secrets
+	docker run -i -t -p 8889:8889 -p 8000:8000 \
+	--env-file $(secrets_path) \
+	--entrypoint "python" \
+	-v $(host_data_path):$(container_data_path) \
+	-v $(host_src_path):$(container_src_path) \
+	-v $(host_notebooks_path):$(container_notebooks_path) \
+	$(IMAGE) \
+	$(container_src_path)/etl/jobs/yelp_ingest_no_airflow.py
 
 app-dev:
 	make secrets

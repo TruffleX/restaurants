@@ -9,7 +9,14 @@ make build
 make run
 ```
 
-If you get errors, call Aaron.
+After this, you can set up a cron to run our ingest code:
+
+```
+env EDITOR=nano crontab -e
+0 23 * * * cd $TRUFFLEX_PATH && make update_db && make yelp_ingest
+```
+
+If you get errors, call Aaron. `make setup` may require sudo depending on your local permissions.
 
 ## Commands:
 
@@ -50,3 +57,4 @@ If you get errors, call Aaron.
 ### Reviews
 Will keep each dataset compressed on s3. I'm keeping them public for now. We'll coordinate on sharing AWS resources and make it private.
 * [Yelp](https://s3-us-west-1.amazonaws.com/restaurant-review-data/yelp/yelp_dataset.tar). Run data/yelp/get_data.py to grab it..
+
