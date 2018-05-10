@@ -1,14 +1,14 @@
 import time
 import logging
+import os
 import pymongo
 from db.dbclient import MongoClient
 from itertools import cycle
 import requests
 import logging
 from tqdm import tqdm_notebook
-from hashlib import md5
-import os
 import datetime
+from hashlib import md5
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -78,7 +78,7 @@ class YelpClient:
         try:
             result = {
                 'image_url': i['image_url'],
-                'name': i['alias'],
+                'name': i['name'],
                 'coords': {'lat': i['coordinates']['latitude'], 'lon': i['coordinates']['longitude']},
                 'phone': i['display_phone'],
                 'yelp': {
@@ -87,6 +87,7 @@ class YelpClient:
                     'price': i.get('price'),
                     'categories': i.get('categories'),
                     'is_closed': False,
+                    'alias': i['alias']
                 }
             }
             result.update(i['location'])
@@ -159,7 +160,9 @@ class YelpClient:
         idx = self.zip_queue.index(last_search) + 1
         return self.zip_queue[idx]
 
-    def get_restaurants(self, max_zips=5):
+    @staticmethod
+    def get_restaurants(max_zips=10):
+        client = YelpClient()
         categories = "restaurants"
         limit = 50
         sort_by = 'distance'
@@ -170,7 +173,7 @@ class YelpClient:
         prog = tqdm_notebook(1e9)
 
         while exception is None and count < max_zips:
-            zipcode = self.pick_next_zip()
+            zipcode = client.pick_next_zip()
             logging.info(f"Searching for zipcode: {zipcode}")
             params = {
                 "limit": limit,
@@ -179,15 +182,15 @@ class YelpClient:
                 "location": zipcode,
                 'offset': 0,
             }
-            restaurants, exception = self.search(url, params, self.log)
+            restaurants, exception = client.search(url, params, client.log)
 
             if exception is None:
-                self.searches.append(zipcode)
+                client.searches.append(zipcode)
                 results.extend(restaurants)
                 count += 1
                 prog.update(len(restaurants))
 
-        self.upload_results(results)
+        client.upload_results(results)
         return results
 
     def upload_results(self, results):

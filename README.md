@@ -4,9 +4,12 @@
 Get docker. Then:
 
 ```bash
+make setup
 make build
 make run
 ```
+
+If you get errors, call Aaron.
 
 ## Commands:
 
