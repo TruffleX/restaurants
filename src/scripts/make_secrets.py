@@ -14,15 +14,15 @@ if __name__ == '__main__':
     yelp_client_id = getpass.getpass("[Optional?] Paste your yelp client ID: ")
 
     entries = [
-        f"MONGO_USER={mongousername}",
-        f"MONGO_PASS={mongopassword}",
-        f"GOOGLE_MAPS_API_KEY={googlemapskey}",
-        f"YELP_API_KEY={yelp_api_key}",
-        f"YELP_CLIENT_ID={yelp_client_id}"
+        "MONGO_USER={mongousername}".format(mongousername=mongousername),
+        "MONGO_PASS={mongopassword}".format(mongopassword=mongopassword),
+        "GOOGLE_MAPS_API_KEY={googlemapskey}".format(googlemapskey=googlemapskey),
+        "YELP_API_KEY={yelp_api_key}".format(yelp_api_key=yelp_api_key),
+        "YELP_CLIENT_ID={yelp_client_id}".format(yelp_client_id=yelp_client_id)
     ]
 
     with open(path, 'w') as file_:
         for entry in entries:
-            file_.write(f"{entry}\n")
+            file_.write("{entry}\n".format(entry=entry))
 
-    logging.info(f"Wrote secrets to {path}")
+    logging.info("Wrote secrets to {path}".format(path=path))
