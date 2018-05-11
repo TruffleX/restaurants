@@ -2,8 +2,6 @@ import logging
 import os
 import pymongo
 import feedparser
-from airflow.models import BaseOperator
-from airflow.utils.decorators import apply_defaults
 
 
 class MongoClient:
