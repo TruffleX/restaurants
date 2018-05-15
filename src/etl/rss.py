@@ -67,7 +67,7 @@ class Feed:
                 logging.info("Skipping, already in db")
                 #pass
 
-        self.article_client.collection.bulk_write(operations)
+        self.article_client.collection.bulk_write(ops)
 
         logging.info(f"Backfilled {count} old documents for {self.url} to db.RSS, missed {i+1 - count}")
 
