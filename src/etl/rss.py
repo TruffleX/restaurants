@@ -1,12 +1,24 @@
 import logging
-from db.dbclient import RssClient
+from db.dbclient import MongoClient
 import feedparser
-
+from bs4 import BeautifulSoup
+import requests as req
+from pymongo import ReplaceOne
+from tqdm import tqdm
 class Feed:
+    # type, attr, value
+    meta_keywords = [
+        ('meta_keywords','name','news_keywords'),
+        ('meta_title', 'property',"og:title"),
+        ('meta_description','property', "og:description"),
+        ('meta_twitter_title','name','twitter:text:title')
+    ]
+
     def __init__(self, url, feedname=None):
         self.url = url
         self.feedname = feedname or ""
-        self.client = RssClient()
+        self.client = MongoClient("RSS")
+        self.article_client = MongoClient("articles")
 
     def get_rss(self):
         try:
@@ -27,12 +39,91 @@ class Feed:
                 yield entry
 
     def update_db(self):
-        c = 0
-        for entry in self.get_new_entries():
-            c += 1
-            self.client.collection.insert_one(entry)
+        rss_count = 0
+        doc_count = 0
 
-        print(f"Uploaded {c} new documents for {self.url} to db")
+        for entry in self.get_new_entries():
+            rss_count += 1
+            self.client.collection.insert_one(entry)
+        logging.info(f"Uploaded {rss_count} new documents for {self.url} to db.RSS")
+
+    def rss_to_articles(self):
+        rss_entries = list(self.client.collection.find({}))
+        already_processed_ids = list(self.article_client.collection.find({}, projection=['rss_id']))
+        already_processed_ids = [str(i['_id']) for i in already_processed_ids]
+        count = 0
+        ops = []
+        logging.info("Beginning Article Extraction...")
+        for i, entry in tqdm(enumerate(rss_entries)):
+            if str(entry['_id']) not in already_processed_ids:
+                try:
+                    data = self.parse(entry)
+                    if data:
+                        ops.append(ReplaceOne({'rss_id': data['rss_id']}, data, upsert=True))
+                        count += 1
+                except Exception as e:
+                    logging.error(f"Exception caught parsing/uploading article:\n{e}")
+            else:
+                logging.info("Skipping, already in db")
+                #pass
+
+        self.article_client.collection.bulk_write(operations)
+
+        logging.info(f"Backfilled {count} old documents for {self.url} to db.RSS, missed {i+1 - count}")
+
+
+    def parse(self, entry):
+        link = entry.get('link')
+        ID = str(entry.get('_id'))
+        if link:
+            resp = req.get(link)
+            if resp.status_code == 200 and hasattr(resp, 'content'):
+                raw_content = resp.content
+                soup = BeautifulSoup(raw_content, "lxml")
+                soup = self.clean_soup(soup)
+                data = self.extract(soup)
+                data['link'] = link
+                data['rss_id'] = ID
+                return data
+
+    @staticmethod
+    def clean_soup(soup, remove_scripts=True, remove_style=True, remove_meta=False):
+        if remove_scripts:
+            for script in soup('script'):
+                script.extract()
+
+        if remove_style:
+            for script in soup('style'):
+                script.extract()
+
+        if remove_meta:
+            for script in soup('meta'):
+                script.extract()
+
+        return soup
+
+    def extract(self, soup):
+        title_html = soup.find('title')
+        title = title_html.text if title_html else None
+        meta = self.extract_metadata(soup)
+        content = self.extract_content(soup)
+        return {
+            'title': title,
+            **content,
+            **meta
+        }
+
+    def extract_content(self, soup):
+        return {'content': " ".join([i.text for i in soup('p')])}
+
+    def extract_metadata(self, soup):
+        vals = {}
+        for meta in soup('meta'):
+            for name, attr, value in self.meta_keywords:
+                found = meta.attrs.get(attr)
+                if found == value:
+                    vals[name] = meta.attrs.get('content')
+        return vals
 
 if __name__ == '__main__':
     logger = logging.getLogger()
@@ -49,3 +140,4 @@ if __name__ == '__main__':
     for url in RSS_URLS:
         rssfeed = Feed(url)
         rssfeed.update_db()
+    rssfeed.rss_to_articles()

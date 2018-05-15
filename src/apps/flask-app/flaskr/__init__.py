@@ -48,9 +48,8 @@ def create_app(test_config=None):
     def map():
         return render_template('map.html', GOOGLE_MAPS_API_KEY=os.environ['GOOGLE_MAPS_API_KEY'])
 
-    @app.route('/api/entries', methods=['POST'])
-    def get_entries():
-        print(request.form)
+    @app.route('/restaurants/filter', methods=['POST'])
+    def filter_entries():
         west = float(request.form['west'])
         east = float(request.form['east'])
         north = float(request.form['north'])
@@ -60,6 +59,11 @@ def create_app(test_config=None):
                                                                 north=north,
                                                                 south=south)
 
+        return encoder.encode([restaurant for restaurant in restaurant_iter])
+
+    @app.route('/restaurants', methods=['GET'])
+    def get_all():
+        restaurant_iter = db_model.restaurants.get_all()
         return encoder.encode([restaurant for restaurant in restaurant_iter])
 
     return app

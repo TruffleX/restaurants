@@ -16,5 +16,5 @@ RUN apt-get update
 RUN apt-get install -y mongodb-org
 USER $NB_USER
 RUN pip install git+https://github.com/nesdis/djongo
-ENV AIRFLOW_JOBS /home/jovyan/src/etl/jobs
+ENV AIRFLOW_HOME /home/jovyan/src/etl/airflow
 ENTRYPOINT bash

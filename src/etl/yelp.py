@@ -186,11 +186,12 @@ class YelpClient:
                 "categories": categories,
                 "location": client._to_zip(zipcode),
                 'offset': 0,
+                'locale': 'en_US',
             }
             restaurants, exception = client.search(url, params, client.log)
+            client.searches.append(zipcode)
 
             if exception is None:
-                client.searches.append(zipcode)
                 results.extend(restaurants)
                 count += 1
                 prog.update(len(restaurants))
@@ -210,9 +211,11 @@ class YelpClient:
 
 
         operations = [ReplaceOne({"hash_id": result['hash_id']}, result, upsert=True) for result in results]
+        records = len(operations)
+        if records > 0:
+            self.result_client.bulk_write(operations)
+            logging.info(f"Wrote {records} to db.")
+        else:
+            logging.warning("Wrote No records to db, FAILURE FAILURE RED ALERT.")
 
-        self.result_client.bulk_write(operations)
         self.save_ingest()
-
-
-

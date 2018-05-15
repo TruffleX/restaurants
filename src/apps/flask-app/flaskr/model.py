@@ -34,6 +34,30 @@ class Restaurants:
 
         return self.dao.find(query)
 
+    def get_all(self):
+        return filter(self.is_5_star, filter(self.is_valid, self.dao.find({})))
+
+    def is_valid(self, blob):
+        coords = blob.get('coords')
+        if coords is None:
+            return False
+        lat, lon = coords.get('lat'), coords.get('lon')
+        if lat is None or lon is None:
+            return False
+        if not isinstance(lat, float) or not isinstance(lon, float):
+            return False
+        return True
+
+    def is_5_star(self, review):
+        yelp = review.get('yelp')
+        if yelp is None:
+            return False
+        rating = yelp.get('rating')
+        if rating is None:
+            return False
+        if rating < 4:
+            return False
+        return True
 
 class Model:
     def __init__(self):

@@ -20,7 +20,7 @@ default_args = {
 
 dag = DAG('yelp-restaurant-ingest',
           default_args=default_args,
-          schedule_interval=timedelta(1))
+          schedule_interval=timedelta(days=1))
 
 task1 = PythonOperator(
     python_callable=YelpClient.get_restaurants,
