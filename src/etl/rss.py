@@ -50,7 +50,7 @@ class Feed:
     def rss_to_articles(self):
         rss_entries = list(self.client.collection.find({}))
         already_processed_ids = list(self.article_client.collection.find({}, projection=['rss_id']))
-        already_processed_ids = [str(i['_id']) for i in already_processed_ids]
+        already_processed_ids = [str(i['rss_id']) for i in already_processed_ids]
         count = 0
         ops = []
         logging.info("Beginning Article Extraction...")
@@ -135,7 +135,10 @@ if __name__ == '__main__':
         'https://www.kcrw.com/news-culture/shows/good-food-on-the-road/rss.xml',
         'http://www.lamag.com/culturefiles/feed/',
         'https://www.timeout.com/los-angeles/blog/feed.rss'
-        "http://www.laweekly.com/index.rss"
+        "http://www.laweekly.com/index.rss",
+        "https://www.finedininglovers.com/rss/all/latest",
+        "https://therestaurantexpert.com/feed/",
+        "https://www.theinfatuation.com/feed/atom",
     ]
     for url in RSS_URLS:
         rssfeed = Feed(url)
