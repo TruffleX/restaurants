@@ -5,6 +5,8 @@ from bs4 import BeautifulSoup
 import requests as req
 from pymongo import ReplaceOne
 from tqdm import tqdm
+from ml.review_model import ReviewModel
+
 class Feed:
     # type, attr, value
     meta_keywords = [
@@ -14,11 +16,12 @@ class Feed:
         ('meta_twitter_title','name','twitter:text:title')
     ]
 
-    def __init__(self, url, feedname=None):
+    def __init__(self, url=None, feedname=None):
         self.url = url
         self.feedname = feedname or ""
         self.client = MongoClient("RSS")
         self.article_client = MongoClient("articles")
+        self.review_model = None
 
     def get_rss(self):
         try:
@@ -67,9 +70,35 @@ class Feed:
                 logging.info("Skipping, already in db")
                 #pass
 
-        self.article_client.collection.bulk_write(ops)
+        if ops:
+            self.article_client.collection.bulk_write(ops)
 
         logging.info(f"Backfilled {count} old documents for {self.url} to db.RSS, missed {i+1 - count}")
+
+    def score_articles(self):
+        """
+        grabs each article, feeds it through the is_review model, annotates the document with a score.
+        :return:
+        """
+
+        self.review_model = ReviewModel()
+        self.review_model.load()
+
+        articles_entries = list(self.article_client.collection.find({}))
+        count = 0
+        ops = []
+        logging.info("Annotating Articles with Review Scores...")
+        for i, entry in tqdm(enumerate(articles_entries)):
+            try:
+                score = self.review_model.predict(entry)
+                entry['is_review_score'] = score
+                ops.append(ReplaceOne({'_id': entry['_id']}, entry, upsert=True))
+                count += 1
+            except Exception as e:
+                logging.error(f"Exception caught assigning review score to article:\n{e}")
+        if ops:
+            self.article_client.collection.bulk_write(ops)
+        logging.info(f"Assigned {count} review scores to db.articles, missed {i+1 - count}")
 
 
     def parse(self, entry):
@@ -125,7 +154,9 @@ class Feed:
                     vals[name] = meta.attrs.get('content')
         return vals
 
+
 if __name__ == '__main__':
+
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     RSS_URLS = [
@@ -143,4 +174,6 @@ if __name__ == '__main__':
     for url in RSS_URLS:
         rssfeed = Feed(url)
         rssfeed.update_db()
+    rssfeed = Feed()
     rssfeed.rss_to_articles()
+    rssfeed.score_articles()

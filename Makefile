@@ -3,8 +3,10 @@ export host_base_path ?= $(shell pwd)
 export host_data_path="$(host_base_path)/data"
 export host_src_path="$(host_base_path)/src"
 export host_notebooks_path="$(host_base_path)/jupyter-notebooks"
+export host_models_path="$(host_base_path)/models"
 export container_data_path=/home/jovyan/data
 export container_src_path=/home/jovyan/src
+export container_models_path=/home/jovyan/models
 export container_notebooks_path=/home/jovyan/jupyter-notebooks
 export secrets_path=secrets
 export IMAGE=trufflex
@@ -48,6 +50,7 @@ jupyter:
 	--entrypoint "jupyter" \
 	-v $(host_data_path):$(container_data_path) \
 	-v $(host_src_path):$(container_src_path) \
+	-v $(host_models_path):$(container_models_path) \
 	-v $(host_notebooks_path):$(container_notebooks_path) \
 	$(IMAGE) \
 	notebook --port 8889
@@ -59,6 +62,7 @@ update_db:
 	--entrypoint "python" \
 	-v $(host_data_path):$(container_data_path) \
 	-v $(host_src_path):$(container_src_path) \
+	-v $(host_models_path):$(container_models_path) \
 	-v $(host_notebooks_path):$(container_notebooks_path) \
 	$(IMAGE) \
 	$(container_src_path)/etl/rss.py
