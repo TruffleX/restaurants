@@ -67,8 +67,7 @@ class Feed:
                 except Exception as e:
                     logging.error(f"Exception caught parsing/uploading article:\n{e}")
             else:
-                logging.info("Skipping, already in db")
-                #pass
+                pass
 
         if ops:
             self.article_client.collection.bulk_write(ops)

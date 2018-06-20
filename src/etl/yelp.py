@@ -124,6 +124,7 @@ class YelpClient:
         if response.status_code != 200:
             if callback:
                 return callback(response.status_code, response.json())
+            return response.json(), response.status_code
         else:
             return response.json(), None
 
@@ -139,10 +140,12 @@ class YelpClient:
                 result, exception = self._search(url, params, callback=callback)
                 if exception is None:
                     results.extend([self.to_entity(i) for i in result['businesses']])
+                else:
+                    return result, exception
                 time.sleep(self.delay_between_requests)
                 logging.info(f"current: {len(results)}, offset: {params['offset']}")
 
-        return results, exception
+        return results, None
 
     def _to_zip(self, zipcode):
         zipcode = "0" * (5 - len(str(zipcode))) + str(zipcode)
@@ -195,6 +198,11 @@ class YelpClient:
                 results.extend(restaurants)
                 count += 1
                 prog.update(len(restaurants))
+            else:
+
+                if restaurants.get("error", {}).get('code', None) in ('LOCATION_NOT_FOUND', ):
+                    client.log("Skipping Safe Exception")
+                    exception = None
 
         client.upload_results(results, notebook=notebook)
         return results
