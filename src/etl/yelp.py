@@ -10,22 +10,29 @@ from tqdm import tqdm_notebook, tqdm
 import datetime
 from hashlib import md5
 from pymongo import ReplaceOne
+from itertools import cycle
+import pandas as pd
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-class Cycle(list):
-    def __getitem__(self, key):
-        try:
-            return super().__getitem__(key)
-        except IndexError:
-            if isinstance(key, int):
-                key = len(self) % key
-                return super().__getitem__(key)
+class CycleSet:
+    """
+    Endlessly iterate through a series of lists, moving between each list at each iteration.
+    """
+    def __init__(self, *lists):
+        self.iters = [cycle(i) for i in lists]
+        self.i_cycle = cycle(range(len(self.iters)))
 
-            else:
-                raise TypeError(f"TypeError: list indices must be integers or slices, not {type(key)}")
+    def __next__(self):
+        i = next(self.i_cycle)
+        l = self.iters[i]
+        return next(l)
+
+    def __iter__(self):
+        while True:
+            yield next(self)
 
 
 class YelpClient:
@@ -69,10 +76,10 @@ class YelpClient:
 
         self.zip_ranges = {
             'LA': range(90001, 90510),
-            'Boston': range(1907, 2305)
+            'Boston': range(1907, 2040)
         }
 
-        self.zip_queue = self.get_zip_queue()
+        self.zip_queue = self.build_zip_priority_queue()
 
     @staticmethod
     def to_entity(i):
@@ -100,9 +107,28 @@ class YelpClient:
             print(i)
             raise e
 
-    def get_zip_queue(self):
-        zip_queue = zip(*list(self.zip_ranges.values()))
-        return Cycle([zipcode for ziplist in zip_queue for zipcode in ziplist])
+    def build_zip_priority_queue(self):
+        targetted_zips = list(self.zip_ranges.values())
+        targetted_zips = [s for a in targetted_zips for s in a]
+
+        unsearched_zips = []
+        searched_zips = {}
+
+        ops = list(self.op_client.find({}))
+        ops = pd.DataFrame(ops)
+
+        for zipcode in targetted_zips:
+            searches = ops[ops.searches.apply(lambda x: zipcode in x)]
+            if len(searches) == 0:
+                unsearched_zips.append(zipcode)
+            else:
+                last_search = searches['date'].max()
+                searched_zips[zipcode] = last_search
+
+        searched_zips = pd.Series(searched_zips).sort_values(ascending=True).index.values.tolist()
+        return (i for i in unsearched_zips + searched_zips)
+
+
 
     def get_last_ingest(self):
         cursor = self.op_client.find({"op": self.op_name})
@@ -156,17 +182,7 @@ class YelpClient:
         return None, Exception("HTTP Error {status_code}: {reason}")
 
     def pick_next_zip(self):
-        if len(self.searches) == 0:
-            last_searches = self.last_ingest.get('searches')
-            if last_searches is None:
-                last_search = self.zip_queue[-1]
-            else:
-                last_search = last_searches[-1]
-        else:
-            last_search = self.searches[-1]
-
-        idx = self.zip_queue.index(last_search) + 1
-        return self.zip_queue[idx]
+        return next(self.zip_queue)
 
     @staticmethod
     def get_restaurants(notebook=False, max_zips=10):
