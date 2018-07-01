@@ -295,7 +295,19 @@ function displayRestaurant(map, restaurant){
       var marker = new google.maps.Marker({
         position: LatLng,
         map: map,
-        title: name,
+        label: {
+          text: name,
+          color: "#eb3a44",
+          fontSize: "12px",
+          //fontWeight: "bold"
+        },
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 5,
+          strokeColor: 'red',
+          labelOrigin: new google.maps.Point(0, 3)
+        },
+        //opacity:.5,
         id:id,
         content: content,
       });
@@ -312,6 +324,9 @@ function displayRestaurant(map, restaurant){
         var button_id = "been-to-"+safe_name
         var button = document.getElementById(button_id)
         button.onclick = () => {console.log("You clicked ", button_id)}
+      });
+      google.maps.event.addListener(map, "click", function(event) {
+        infowindow.close()
       });
 
 }
