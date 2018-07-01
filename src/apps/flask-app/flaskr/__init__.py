@@ -4,6 +4,7 @@ from flask import Flask, render_template, request, jsonify
 from . import database, model
 import json
 from bson import ObjectId
+import pymongo
 
 class JSONEncoder(json.JSONEncoder):
     def default(self, o):
@@ -54,10 +55,14 @@ def create_app(test_config=None):
         east = float(request.form['east'])
         north = float(request.form['north'])
         south = float(request.form['south'])
+        max_results = int(request.form['max_results'])
+        print(request.form)
         restaurant_iter = db_model.restaurants.filter_by_coords(west=west,
                                                                 east=east,
                                                                 north=north,
                                                                 south=south)
+
+        restaurant_iter = restaurant_iter.sort('yelp.rating', pymongo.DESCENDING).limit(max_results)
 
         return encoder.encode([restaurant for restaurant in restaurant_iter])
 
