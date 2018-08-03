@@ -169,6 +169,8 @@ if __name__ == '__main__':
         "https://www.finedininglovers.com/rss/all/latest",
         "https://therestaurantexpert.com/feed/",
         "https://www.theinfatuation.com/feed/atom",
+        "la.eater.com/rss/index.xml",
+        "lafoodie.com/rss"
     ]
     for url in RSS_URLS:
         rssfeed = Feed(url)

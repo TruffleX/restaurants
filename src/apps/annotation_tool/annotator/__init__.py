@@ -9,11 +9,38 @@ from db.dbclient import MongoClient
 def prev(obj):
     return obj.__prev__()
 
+
+def docsToSpacy(doclist):
+    docstring = ""#.join([i['text'] for i in doc])
+    labels = []
+    l0 = -1
+    l1 = -1
+    curr_label = False
+    lab = None
+    for i, char in enumerate(doclist):
+        docstring += char['text']
+        entity = char['entity']
+        if entity:
+            if not curr_label:
+                lab = char['entity']
+                curr_label = True
+                l0 = i
+            else:
+                l1 = i
+        else:
+            curr_label = False
+            # we just finished a label
+            if l1 == i - 1 and i > 0:
+                label = (l0, l1, lab)
+                labels.append(label)
+    return {'document': docstring, 'entities': labels}
+
 class MongoIterator:
     def __init__(self, collection):
         self.i = -1
         self.collection = collection
-        ids = collection.find({}, projection=['_id'])
+        query = {"is_review_score": {"$gt": .5}, "entities": None}
+        ids = collection.find(query, projection=['_id'])
         self.ids = [i['_id'] for i in ids]
     def getter(self, i):
         query = {"_id": self.ids[i]}
@@ -40,6 +67,8 @@ class JSONEncoder(json.JSONEncoder):
             return str(o)
         return json.JSONEncoder.default(self, o)
 
+active_doc = None
+
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -63,39 +92,53 @@ def create_app(test_config=None):
 
     encoder = JSONEncoder()
     source_db = MongoClient("articles").collection
+    labels_db = MongoClient('labels').collection
     source_iter = MongoIterator(source_db)
-
-
 
     @app.route('/')
     def map():
         doc = next(source_iter)
+        global active_doc
+        active_doc = doc
         return render_template('main.html',
             doc=doc['content'],
             title=doc["title"],
-            annotations=doc.get('annotations')
+            entities=doc.get('entities')
         )
 
     @app.route('/next')
     def get_next():
         doc = next(source_iter)
+        global active_doc
+        active_doc = doc
         return jsonify({
             "doc": doc.get('content', ""),
             'title': doc.get('title', ""),
-            'annotations': doc.get('annotations', []),
+            'entities': doc.get('entities', []),
         })
 
     @app.route('/prev')
     def get_prev():
         doc = prev(source_iter)
+        global active_doc
+        active_doc = doc
         return jsonify({
             "doc": doc.get('content', ""),
             'title': doc.get('title', ""),
-            'annotations': doc.get('annotations', []),
+            'entities': doc.get('entities', []),
         })
 
+    @app.route('/submit', methods=['POST'])
+    def submit():
+        data = json.loads(request.form['document'])
+        print("RECEIVED DATA")
+        spacyGold = docsToSpacy(data)
+        labels_db.insert_one(spacyGold)
+        active_doc['entities'] = spacyGold['entities']
+        query = {'_id': active_doc['_id']}
+        source_db.replace_one(query, active_doc, upsert=True)
+        return jsonify({'status': "success"})
     return app
-
 
 def get_next_doc():
     client = MongoClient("articles")

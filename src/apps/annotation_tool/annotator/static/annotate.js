@@ -1,170 +1,96 @@
-
-
-
-
-
-
-// keep track of the ""
-var current_document = ""
-
-function highlightWords(hash) {
-    var offset = 0;
-    var original;
-
-    $.each(hash, function(val) {
-        original = $(".doc-content").html();
-        var length = original.length;
-        var before = original.substring(0,val[0]+offset);
-        var replace = original.substring(val[0]+offset, val[1]+offset);
-        var after = original.substring(val[1]+offset,length);
-        var final = before + "<span class='highlight'>" + replace + "</span>" + after;
-        offset += 33;
-        $(".doc-content").html(final);
-    });
-}
-
-function getSelectionText() {
-    var text = "";
-    var activeEl = document.activeElement;
-    var activeElTagName = activeEl ? activeEl.tagName.toLowerCase() : null;
-    if (
-      (activeElTagName == "textarea") || (activeElTagName == "input" &&
-      /^(?:text|search|password|tel|url)$/i.test(activeEl.type)) &&
-      (typeof activeEl.selectionStart == "number")
-    ) {
-        text = activeEl.value.slice(activeEl.selectionStart, activeEl.selectionEnd);
-    } else if (window.getSelection) {
-        text = window.getSelection().toString();
+function autocomplete(inp, arr) {
+  /*the autocomplete function takes two arguments,
+  the text field element and an array of possible autocompleted values:*/
+  var currentFocus;
+  /*execute a function when someone writes in the text field:*/
+  inp.addEventListener("input", function(e) {
+      var a, b, i, val = this.value;
+      /*close any already open lists of autocompleted values*/
+      closeAllLists();
+      if (!val) { return false;}
+      currentFocus = -1;
+      /*create a DIV element that will contain the items (values):*/
+      a = document.createElement("DIV");
+      a.setAttribute("id", this.id + "autocomplete-list");
+      a.setAttribute("class", "autocomplete-items");
+      /*append the DIV element as a child of the autocomplete container:*/
+      this.parentNode.appendChild(a);
+      /*for each item in the array...*/
+      for (i = 0; i < arr.length; i++) {
+        /*check if the item starts with the same letters as the text field value:*/
+        if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+          /*create a DIV element for each matching element:*/
+          b = document.createElement("DIV");
+          /*make the matching letters bold:*/
+          b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+          b.innerHTML += arr[i].substr(val.length);
+          /*insert a input field that will hold the current array item's value:*/
+          b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+          /*execute a function when someone clicks on the item value (DIV element):*/
+              b.addEventListener("click", function(e) {
+              /*insert the value for the autocomplete text field:*/
+              inp.value = this.getElementsByTagName("input")[0].value;
+              /*close the list of autocompleted values,
+              (or any other open lists of autocompleted values:*/
+              closeAllLists();
+          });
+          a.appendChild(b);
+        }
+      }
+  });
+  /*execute a function presses a key on the keyboard:*/
+  inp.addEventListener("keydown", function(e) {
+      var x = document.getElementById(this.id + "autocomplete-list");
+      if (x) x = x.getElementsByTagName("div");
+      if (e.keyCode == 40) {
+        /*If the arrow DOWN key is pressed,
+        increase the currentFocus variable:*/
+        currentFocus++;
+        /*and and make the current item more visible:*/
+        addActive(x);
+      } else if (e.keyCode == 38) { //up
+        /*If the arrow UP key is pressed,
+        decrease the currentFocus variable:*/
+        currentFocus--;
+        /*and and make the current item more visible:*/
+        addActive(x);
+      } else if (e.keyCode == 13) {
+        /*If the ENTER key is pressed, prevent the form from being submitted,*/
+        e.preventDefault();
+        if (currentFocus > -1) {
+          /*and simulate a click on the "active" item:*/
+          if (x) x[currentFocus].click();
+        }
+      }
+  });
+  function addActive(x) {
+    /*a function to classify an item as "active":*/
+    if (!x) return false;
+    /*start by removing the "active" class on all items:*/
+    removeActive(x);
+    if (currentFocus >= x.length) currentFocus = 0;
+    if (currentFocus < 0) currentFocus = (x.length - 1);
+    /*add class "autocomplete-active":*/
+    x[currentFocus].classList.add("autocomplete-active");
+  }
+  function removeActive(x) {
+    /*a function to remove the "active" class from all autocomplete items:*/
+    for (var i = 0; i < x.length; i++) {
+      x[i].classList.remove("autocomplete-active");
     }
-
-    return text;
-}
-
-
-// function getSelectionOfText() {
-//   var sel = window.getSelection()
-//   var activeEl = document.activeElement;
-//   var text = activeEl.innerHTML
-//   var start = sel.anchorOffset
-//   var end = sel.extentOffset
-//   console.log(start, end)
-  //highlightWords([start, end])
-
-  // var parts = [
-  //   text.substring(0, start),
-  //   "<span class='highlight'>",
-  //   text.substring(start, end),
-  //   "</span>",
-  //   text.substring(end, text.length)
-  // ]
-  //
-  // activeEl.innerHTML = parts.join("")
-
-  // var
-  // var start = window.getSelection().extentOffset
-  // var end = window.getSelection().anchorOffset
-  //
-  // sel.anchorNode.textContent.substring(
-  //   start,
-  //   end
-  // )
-}
-
-function getSelectedText(){
-  var selection = window.getSelection()
-  var start = selection.anchorOffset
-  var end = selection.extentOffset
-  var container = selection.anchorNode.parentNode
-  var text = container.textContent.substring(start, end)
-  return [text, start, end, container]
-}
-
-function offerAnnotation(text){
-  var container = document.getElementById('dynamic-select')
-  console.log(text)
-  if (typeof text != 'undefined' && text.length > 0) {
-      container.style.visibility = 'visible'
-      var annotate_content = document.getElementById('annotate_content')
-      annotate_content.value = text
-    } else{
-      container.style.visibility = 'hidden'
+  }
+  function closeAllLists(elmnt) {
+    /*close all autocomplete lists in the document,
+    except the one passed as an argument:*/
+    var x = document.getElementsByClassName("autocomplete-items");
+    for (var i = 0; i < x.length; i++) {
+      if (elmnt != x[i] && elmnt != inp) {
+      x[i].parentNode.removeChild(x[i]);
     }
+  }
 }
-document.onmouseup = function() {
-  var arr = getSelectedText()
-  var text = arr[0]
-  var start = arr[1]
-  var end = arr[2]
-  var container = arr[3]
-  offerAnnotation(text)
-};
-
-
-function submitAnnotation(){
-    var selected_text = getSelectedText()
-    var data = {'text': selected_text, 'doc': doc}
-    $.post(
-        '/submit',
-        doc,
-        function(results){next()}
-     )
-}
-
-function apply_annotations(annotations){
-  annotations.map(a => {
-    var text = a[0]
-    var x0 = a[1]
-    var x1 = a[2]
-  })
-}
-
-function apply_value(content, container_id){
-  var container = document.getElementById(container_id)
-  container.textContent = content
-}
-
-
-
-function apply(title, doc, annotations){
-  apply_value(doc, "doc-content")
-  apply_value(title, "doc-title")
-  apply_annotations(annotations)
-}
-
-function next(){
-  $.get(
-    "/next",
-    function(result){
-      var doc = result['doc']
-      var title = result['title']
-      var annotations = result['annotations']
-      apply(title, doc, annotations)
-    }
-  )
-}
-
-function annotate(){
-  var arr = getSelectedText()
-  var text = arr[0]
-  var start = arr[1]
-  var end = arr[2]
-  var container = arr[3]
-  apply_annotations([[text, start, stop]])
-  // var matched_text = getSelectionText()
-  // var doc_container = document.getElementById("article")
-  // var pattern = new RegExp(matched_text, "g")
-  // var repl = "<span class='highlight'>" + matched_text + "</span>"
-  // doc_container.innerHTML = doc_container.innerHTML.replace(pattern, repl)
-}
-
-function prev(){
-  $.get(
-    "/prev",
-    function(result){
-      var doc = result['doc']
-      var title = result['title']
-      var annotations = result['annotations']
-      apply(title, doc, annotations)
-    }
-  )
+/*execute a function when someone clicks in the document:*/
+document.addEventListener("click", function (e) {
+    closeAllLists(e.target);
+});
 }
